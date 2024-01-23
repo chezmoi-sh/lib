@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: 3
+
+includes:
+  terraform:
+    alias: [tf]
+    taskfile: ./taskfiles/terraform.taskfile.yaml
+    vars:
+      TF_ROOT_DIR: '{{ .ROOT_DIR }}/terraform'
+
+tasks:
+  default:
+    desc: List available tasks for this project
+    silent: true
+    cmds: ["task --list"]

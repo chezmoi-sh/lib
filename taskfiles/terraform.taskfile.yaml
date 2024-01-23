@@ -1,0 +1,148 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+# terraform.taskfile.yaml:
+#   Wraps some Terraform commands and implements some useful tasks to manage Terraform.
+#
+# Usage:
+#   includes:
+#     terraform:
+#       alias: [tf]
+#       taskfile: https://raw.githubusercontent.com/chezmoi-sh/lib/main/taskfiles/terraform.taskfile.yaml
+#       vars:
+#         TF_ROOT_DIR: '{{ .ROOT_DIR }}/terraform'
+#
+# Commands:
+#   task terraform:plan → Show changes required by the current configuration
+#   task terraform:apply → Create or update infrastructure
+#   task terraform:destroy → Destroy previously-created infrastructure
+#   task terraform:lint → Check that the configuration is valid
+#   task terraform:docs → Update the documentation of the Terraform modules
+
+version: 3
+
+vars:
+  TF_ROOT_DIR: ""
+  TF_DOCS_CONFIG: Zm9ybWF0dGVyOiBtYXJrZG93biB0YWJsZQoKY29udGVudDogfC0KICB7eyAuSW5wdXRzIHwgcmVwbGFjZSAiXCJ8XCIiICJcIlxcfFwiIiB9fQoKICB7eyAuT3V0cHV0cyB9fQoKICB7eyAuUHJvdmlkZXJzIH19CgpvdXRwdXQ6CiAgZmlsZTogUkVBRE1FLm1kCiAgbW9kZTogaW5qZWN0CiAgdGVtcGxhdGU6IHwtCiAgICA8IS0tIEJFR0lOX1RGX0RPQ1MgLS0+CiAgICB7eyAuQ29udGVudCB9fQogICAgPCEtLSBFTkRfVEZfRE9DUyAtLT4KCnNvcnQ6CiAgZW5hYmxlZDogdHJ1ZQogIGJ5OiByZXF1aXJlZAo=
+
+tasks:
+  # ┌───────────────────────────────────────────────────────────────────────────┐
+  # │ Is Terraformable?                                                         │
+  # │                                                                           │
+  # │ This task is used to check if the current directory is Terraformable      │
+  # │ (aka. if it can run Terraform commands).                                  │
+  # └───────────────────────────────────────────────────────────────────────────┘
+  is_terraformable:
+    desc: Check if the current directory is Terraformable
+    internal: true
+
+    preconditions:
+      - sh: '[ -n "{{ .TF_ROOT_DIR }}" ]'
+        msg: TF_ROOT_DIR is required
+      - sh: '[[ "{{ .USER_WORKING_DIR }}" == "{{ .TF_ROOT_DIR }}"* ]]'
+        msg: This task must be run into {{ trimPrefix "/" (trimPrefix (dir .ROOT_DIR) .TF_ROOT_DIR) }}
+    run: once
+    silent: true
+
+  # ┌───────────────────────────────────────────────────────────────────────────┐
+  # │ Terraform commands                                                        │
+  # │                                                                           │
+  # │ Wraps Terraform commands.                                                 │
+  # └───────────────────────────────────────────────────────────────────────────┘
+  init:
+    desc: Prepare your working directory for other commands
+    label: terraform:init → {{ trimPrefix "/" (trimPrefix (dir .TF_ROOT_DIR) .USER_WORKING_DIR)}}
+
+    cmds:
+      - terraform init
+    deps: [is_terraformable]
+    dir: "{{ .USER_WORKING_DIR }}"
+    status:
+      - test -d .terraform
+
+  plan:
+    desc: Show changes required by the current configuration
+    label: terraform:plan → {{ trimPrefix "/" (trimPrefix (dir .TF_ROOT_DIR) .USER_WORKING_DIR)}}
+
+    cmds:
+      - terraform plan
+    deps: [is_terraformable, init]
+    dir: "{{ .USER_WORKING_DIR }}"
+
+  apply:
+    desc: Create or update infrastructure
+    label: terraform:apply → {{ trimPrefix "/" (trimPrefix (dir .TF_ROOT_DIR) .USER_WORKING_DIR)}}
+
+    cmds:
+      - terraform apply
+    deps: [is_terraformable, init]
+    dir: "{{ .USER_WORKING_DIR }}"
+
+  destroy:
+    desc: Destroy previously-created infrastructure
+    label: terraform:destroy → {{ trimPrefix "/" (trimPrefix (dir .TF_ROOT_DIR) .USER_WORKING_DIR)}}
+    prompt: Are you sure you want to destroy all resources?
+
+    cmds:
+      - terraform destroy
+    deps: [is_terraformable, init]
+    dir: "{{ .USER_WORKING_DIR }}"
+
+  # ┌───────────────────────────────────────────────────────────────────────────┐
+  # │ Terraform tools                                                           │
+  # │                                                                           │
+  # │ Implements some useful tasks to manage Terraform.                         │
+  # └───────────────────────────────────────────────────────────────────────────┘
+  lint:
+    desc: Check that the configuration is valid
+    label: terraform:lint → {{ trimPrefix "/" (trimPrefix (dir .TF_ROOT_DIR) .USER_WORKING_DIR)}}
+
+    cmds:
+      - terraform fmt -write=true
+      - terraform validate
+    deps: [is_terraformable, init]
+    dir: "{{ .USER_WORKING_DIR }}"
+
+  lint:all:
+    desc: Check that all Terraform configurations in this repository are valid
+
+    cmds:
+      - for: { var: TERRAFORM_DIRS, split: "\n", as: dir }
+        cmd: cd {{ .dir }} && task terraform:lint
+    dir: "{{ .TF_ROOT_DIR }}"
+    silent: true
+    vars:
+      TERRAFORM_DIRS:
+        sh: find {{ .TF_ROOT_DIR }} -type f -name '*.tf' -printf '%h\n' | sort | uniq
+
+  docs:init:
+    desc: Initialize the documentation of the Terraform modules
+    internal: true
+
+    cmds:
+      - echo "{{ .TF_DOCS_CONFIG }}" | base64 --decode > .terraform-docs.yaml
+    deps: [is_terraformable]
+    dir: "{{ .USER_WORKING_DIR }}"
+    silent: true
+    status:
+      - test -f .terraform-docs.yaml
+
+  docs:
+    desc: Update the documentation of the Terraform modules
+    label: terraform:docs → {{ trimPrefix "/" (trimPrefix (dir .TF_ROOT_DIR) .USER_WORKING_DIR)}}
+
+    cmds:
+      - terraform-docs markdown table --config .terraform-docs.yaml .
+    deps: [is_terraformable, docs:init]
+    dir: "{{ .USER_WORKING_DIR }}"
+
+  docs:all:
+    desc: Update the documentation of all Terraform modules in this repository
+
+    cmds:
+      - for: { var: TERRAFORM_DIRS, split: "\n", as: dir }
+        cmd: cd {{ .dir }} && (test -f .terraform-docs.yaml && task terraform:docs) || true
+    dir: "{{ .TF_ROOT_DIR }}"
+    silent: true
+    vars:
+      TERRAFORM_DIRS:
+        sh: find {{ .TF_ROOT_DIR }} -type f -name '*.tf' -printf '%h\n' | sort | uniq
