@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=https://json.schemastore.org/lefthook.json
+assert_lefthook_installed: true
+
+remotes:
+  - git_url: https://github.com/chezmoi-sh/libraries.git
+    configs:
+      - lefthook/gitmoji.lefthook.yaml
