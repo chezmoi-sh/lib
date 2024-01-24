@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=https://static.trunk.io/pub/trunk-yaml-schema.json
+
+version: 0.1
+actions:
+  definitions:
+    - id: gitmoji
+      description: Enforce gitmoji commit message standards
+      display_name: Gitmoji
+      interactive: true
+
+      packages_file: package.json
+      run: gitmoji --hook ${1}
+      runtime: node
+      triggers:
+        - git_hooks: [prepare-commit-msg]
