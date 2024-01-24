@@ -108,7 +108,6 @@ tasks:
     cmds:
       - for: { var: TERRAFORM_DIRS, split: "\n", as: dir }
         cmd: cd {{ .dir }} && task terraform:lint
-    dir: "{{ .TF_ROOT_DIR }}"
     silent: true
     vars:
       TERRAFORM_DIRS:
@@ -141,7 +140,6 @@ tasks:
     cmds:
       - for: { var: TERRAFORM_DIRS, split: "\n", as: dir }
         cmd: cd {{ .dir }} && (test -f .terraform-docs.yaml && task terraform:docs) || true
-    dir: "{{ .TF_ROOT_DIR }}"
     silent: true
     vars:
       TERRAFORM_DIRS:
