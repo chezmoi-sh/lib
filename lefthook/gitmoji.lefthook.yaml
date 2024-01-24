@@ -1,8 +1,0 @@
-# yaml-language-server: $schema=https://json.schemastore.org/lefthook.json
-
-# Configure lefthook to run gitmoji on commit messages
-prepare-commit-msg:
-  commands:
-    gitmoji:
-      run: gitmoji --hook {0} {1}
-      interactive: true

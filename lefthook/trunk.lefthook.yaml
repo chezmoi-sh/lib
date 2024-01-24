@@ -1,8 +1,0 @@
-# yaml-language-server: $schema=https://json.schemastore.org/lefthook.json
-
-# Configure lefthook to run Trunk
-pre-commit:
-  commands:
-    trunk:
-      run: trunk check
-      interactive: true
