@@ -1,0 +1,16 @@
+name: Lint everything (Trunk)
+
+on:
+  pull_request: {}
+  push:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  trunk:
+    name: Trunk.io
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: trunk-io/trunk-action@97ecd21fe6c743bf7a606791584b683a7995c70e # v1.1.9
