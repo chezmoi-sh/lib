@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths: [.trunk/trunk.yaml]
 
-permissions: {}
+permissions: read-all
 
 jobs:
   trunk-cache:

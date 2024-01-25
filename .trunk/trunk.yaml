@@ -33,6 +33,7 @@ lint:
     - yamllint@1.33.0
 actions:
   enabled:
+    - trunk-check-pre-commit
     - gitmoji
     - trunk-announce
     - trunk-check-pre-push
