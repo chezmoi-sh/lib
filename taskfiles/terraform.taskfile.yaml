@@ -16,7 +16,11 @@
 #   task terraform:apply → Create or update infrastructure
 #   task terraform:destroy → Destroy previously-created infrastructure
 #   task terraform:lint → Check that the configuration is valid
+#   task terraform:lint:all → Check that all Terraform configurations in this repository are valid
+#   task terraform:fmt → Rewrites all Terraform configuration files to a canonical format
+#   task terraform:fmt:all → Rewrites all Terraform configuration files to a canonical format
 #   task terraform:docs → Update the documentation of the Terraform modules
+#   task terraform:docs:all → Update the documentation of all Terraform modules in this repository
 
 version: 3
 
@@ -92,22 +96,42 @@ tasks:
   # │                                                                           │
   # │ Implements some useful tasks to manage Terraform.                         │
   # └───────────────────────────────────────────────────────────────────────────┘
-  lint:
+  check:
     desc: Check that the configuration is valid
-    label: terraform:lint → {{ trimPrefix "/" (trimPrefix (dir .TF_ROOT_DIR) .USER_WORKING_DIR)}}
+    label: terraform:check → {{ trimPrefix "/" (trimPrefix (dir .TF_ROOT_DIR) .USER_WORKING_DIR)}}
 
     cmds:
-      - terraform fmt -write=true
+      - terraform fmt -diff -check
       - terraform validate
     deps: [is_terraformable, init]
     dir: "{{ .USER_WORKING_DIR }}"
 
-  lint:all:
+  check:all:
     desc: Check that all Terraform configurations in this repository are valid
 
     cmds:
       - for: { var: TERRAFORM_DIRS, split: "\n", as: dir }
-        cmd: cd {{ .dir }} && task terraform:lint
+        cmd: cd {{ .dir }} && task terraform:check
+    silent: true
+    vars:
+      TERRAFORM_DIRS:
+        sh: find {{ .TF_ROOT_DIR }} -type f -name '*.tf' -printf '%h\n' | sort | uniq
+
+  fmt:
+    desc: Rewrites all Terraform configuration files to a canonical format
+    label: terraform:fmt → {{ trimPrefix "/" (trimPrefix (dir .TF_ROOT_DIR) .USER_WORKING_DIR)}}
+
+    cmds:
+      - terraform fmt -write=true
+    deps: [is_terraformable]
+    dir: "{{ .USER_WORKING_DIR }}"
+
+  fmt:all:
+    desc: Rewrites all Terraform configuration files to a canonical format
+
+    cmds:
+      - for: { var: TERRAFORM_DIRS, split: "\n", as: dir }
+        cmd: cd {{ .dir }} && task terraform:fmt
     silent: true
     vars:
       TERRAFORM_DIRS:
