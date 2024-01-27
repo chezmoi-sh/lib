@@ -6,10 +6,20 @@ includes:
     alias: [tf]
     taskfile: ./taskfiles/terraform.taskfile.yaml
     vars:
-      TF_ROOT_DIR: '{{ .ROOT_DIR }}/terraform'
+      TF_ROOT_DIR: "{{ .ROOT_DIR }}/terraform"
 
 tasks:
   default:
     desc: List available tasks for this project
     silent: true
     cmds: ["task --list"]
+
+  check:
+    desc: Check if everything in this project is ready to be committed
+    deps:
+      - task: terraform:lint:all
+
+  fmt:
+    desc: Format all files in this project
+    deps:
+      - task: terraform:fmt:all
