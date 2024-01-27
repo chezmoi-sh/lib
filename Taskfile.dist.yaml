@@ -12,7 +12,7 @@ tasks:
   default:
     desc: List available tasks for this project
     silent: true
-    cmds: ["task --list"]
+    cmds: [task --list]
 
   check:
     desc: Check if everything in this project is ready to be committed
