@@ -1,6 +1,7 @@
 name: Lint everything (Trunk)
 
 on:
+  merge_group: {}
   pull_request: {}
   push:
     branches: [main]
