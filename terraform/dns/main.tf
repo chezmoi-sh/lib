@@ -11,8 +11,7 @@ resource "cloudflare_record" "this" {
   proxied  = each.value.proxied
   priority = each.value.priority
 
-  comment = "Managed by Terraform (chezmoi.sh|${var.project})"
-  tags    = merge(each.value.tags, { "terraform_managed" = "true" })
+  comment = "${try("${each.value.comment} ", "")}(managed by Terraform for chezmoi.sh|${var.project})"
 
   dynamic "data" {
     for_each = each.value.data
