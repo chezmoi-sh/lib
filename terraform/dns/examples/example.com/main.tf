@@ -17,10 +17,6 @@ module "cloudflare_dns" {
       proxied  = true
       priority = 10
 
-      tags = {
-        environment = "production"
-      }
-
       data = [
         {
           protocol = 6
