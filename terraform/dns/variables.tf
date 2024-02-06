@@ -20,7 +20,7 @@ variable "records" {
     proxied  = optional(bool, false)
     priority = optional(number)
 
-    tags = optional(map(string))
+    comment = optional(string)
 
     data = optional(list(object({
       algorithm      = optional(number)
@@ -62,7 +62,7 @@ variable "records" {
       usage          = optional(number)
       value          = optional(string)
       weight         = optional(number)
-    })))
+    })), [])
   }))
 
   validation {
