@@ -62,7 +62,7 @@ variable "records" {
       usage          = optional(number)
       value          = optional(string)
       weight         = optional(number)
-    })))
+    })), [])
   }))
 
   validation {
